@@ -10,97 +10,94 @@ import sys
 import shutil
 
 from re import match
+totalCC = 0
+manager_url = 'http://localhost:1111/'
 
-ccConfig = Config(
-                   exclude='',
-                   ignore='venv',
-                   order=SCORE,
-                   no_assert=True,
-                   show_closures=False,
-                   min='A',
-                   max='F',
-                   )
+class Node():
+    ccConfig = Config(
+                       exclude='',
+                       ignore='venv',
+                       order=SCORE,
+                       no_assert=True,
+                       show_closures=False,
+                       min='A',
+                       max='F',
+                       )
 
-def getHeader():
-    with open('github-token.txt', 'r') as tmp_file:
-        token = tmp_file.read()     # get the token from a text file in current directory
+    def __init__(self):
+        self.blobUrl = requests.get(self.masterUrl).json()
+        print(self.blobUrl)
 
-    payload = {'access_token': token}
-    headers = {'Accept': 'application/vnd.github.v3.raw'}
-    
-#print(token)
-    return (payload, headers)
+    def getHeader():
+        with open('github-token.txt', 'r') as tmp_file:
+            token = tmp_file.read()     # get the token from a text file in current directory
+
+        payload = {'access_token': token}
+        headers = {'Accept': 'application/vnd.github.v3.raw'}
+        
+        #print(token)
+        return (payload, headers)
 
 
-def check_py(filename):
-    return True if match('.*\.py', filename) is not None else False
+    def check_py(filename):
+        return True if match('.*\.py', filename) is not None else False
 
-def calc_CC(raw_url, ccConfig):
-    
-    blob_url = raw_url.split('|')[0]
-    filename = raw_url.split('|')[1]
-    
-    payload_headers = getHeader()
-    
-    flag = check_py(filename)
-    if flag == True:
+    def calcCC(rawUrl, ccConfig):
         
-        resp = requests.get(blob_url,   params=payload_headers[0], headers=payload_headers[1])
+        blobUrl = rawUrl.split('|')[0]
+        filename = rawUrl.split('|')[1]
         
-        file_path = filename
+        payload_headers = self.getHeader()
         
-        with open(file_path, 'w') as tmp_file:
-            tmp_file.write(resp.text)
-        tmp_file.close()
+        flag = self.check_py(filename)
         
-        
-        CC_file_get = open(file_path, 'r')
-        results = CCHarvester(file_path, ccConfig).gobble(CC_file_get)
-        CC_file_get.close()
-        os.remove(file_path)
-        
-        file_cc = 0
-        
-        for i in results:
-            print (i.complexity)
-            file_cc += int(i.complexity)
-        
-        #avg_cc = file_cc/ len(results)
-        print("Complexity of file: " + str(file_cc))
-        #print("Average complexity of file: " + str(avg_cc))
-        return file_cc
-    else:
-        return -1
+        if flag == True:
+            
+            resp = requests.get(blobUrl,   params=payload_headers[0], headers=payload_headers[1])
+            
+            filePath = filename
+            
+            with open(filePath, 'w') as tmp_file:
+                tmpFile.write(resp.text)
+            tmpFile.close()
+            
+            
+            getFile = open(file_path, 'r')
+            results = CCHarvester(filePath, ccConfig).gobble(getFile)
+            CC_file_get.close()
+            os.remove(filePath)
+            
+            fileCC = 0
+            
+            for x in results:
+                print (x.complexity)
+                fileCC += int(x.complexity)
+            
+            print("Complexity of file: " + str(fileCC))
+            return fileCC
+        else:
+            return 0
 
-def receive_work():
-    
-    ccsocket = socket(AF_INET, SOCK_STREAM)
-    serverName = 'localhost'
-    serverPort = 1111
-    ccsocket.connect((serverName, serverPort))
-    
-    message = 'Free'
-    ccsocket.send(message)
-    
-    while True:
-        rawUrl = connectionSocket.recv(1024)
+    def receiveWork():
+        print("Blob: " + self.blobUrl)
         
-        if rawUrl == 
-        print("Received from master: " + rawUrl)
+        fileCC= self.calcCC(self.blobUrl)
+        self.totalCC += fileCC
         
-        file_cc = calc_CC(rawUrl, ccConfig)
-        
-        file_cc = str(file_cc)
-        print(file_cc)
-        connectionSocket.send(file_cc.encode())
-    
-    connectionSocket.close()
+        self.blobUrl = requests.get(self.masterUrl).json()
+        if self.blobUrl != "finished":
+            self.receiveWork()
+        else:
+            print("Finished...")
+            print("Total CC: " + str(self.totalCC))
+            requests.put(self.masterUrl, data={'cc': self.totalCC})
 
 
 def main():
     
     print("Worker is ready to receive...")
-    receive_work()
+    node = Node()
+    node.receive_work()
 
 if __name__ == "__main__":
     main()

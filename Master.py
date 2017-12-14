@@ -28,12 +28,12 @@ class Master(Resource):
 def put(self):
     global CC
         
-        newCC = int(request.form['cc'])
-        
-        print("RECEIVED: " + str(newCC))
-        aveCC = newCC / blobListLength
-        print("Average CC: " + str(aveCC))
-        return '', 204
+    newCC = int(request.form['cc'])
+    
+    print("RECEIVED: " + str(newCC))
+    aveCC = newCC / blobListLength
+    print("Average CC: " + str(aveCC))
+    return '', 204
 
 def getTrees(githubUrl):
     print("1")
