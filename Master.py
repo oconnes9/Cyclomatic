@@ -1,11 +1,39 @@
 from socket import *
 import requests
 from collections import deque
+from flask import Flask
+from flask_restful import Resource, Api, request
 import shutil
 
 trees = []
 blobUrlList = []
 githubUrl = 'https://api.github.com/repos/oconnes9/Distributed_System/commits'
+app = Flask(__name__)
+api = Api(app)
+blobUrlList = deque()
+newCC = 0
+CC = 0
+blobListLength = 0
+
+class Master(Resource):
+    
+    def get(self):
+        global blobUrlList
+        if blobList:
+            return blobList.popleft()
+        else:
+            return "finished"
+
+
+def put(self):
+    global CC
+        
+        newCC = int(request.form['cc'])
+        
+        print("RECEIVED: " + str(newCC))
+        aveCC = newCC / blobListLength
+        print("Average CC: " + str(aveCC))
+        return '', 204
 
 def getTrees(githubUrl):
     print("1")
@@ -31,11 +59,10 @@ def blobList(githubUrl, trees):
         for item in tree:
             fileUrl = item['url']
             filename = item['path']
-            
             urlFilename = fileUrl + '|' + filename
             blobUrlList.append(urlFilename)
 
-    return blobUrlList
+    blobListLength = len(blobUrlList)
 
 def getParamHeaders():
     print("3")
@@ -80,12 +107,30 @@ def main():
     print("Gettng blob URL's...")
     blobUrlList = blobList(githubUrl, trees)    # get blob URLs of each tree's
     print("Commenced sending of raw URL's to worker...")
-    total_cc = send_work(blobUrlList)     # send the raw URL's to the worker
-    
-    print("Total CC is: " + str(totalCC))
-    
-    avgCC = totalCC/len(blobUrlList)
-    print("Average CC is: " + str(avgCC))
+    app.run(host = 'localhost', port = 1111, debug=True)
+    api.add_resource(Master, '/')
+
+#    finished = False;
+#    while finished is false:
+#        connectionSocket, addr = manager_socket.accept()
+#        recv_msg = connectionSocket.recv(1024)
+#        recv_msg = recv_msg.decode()
+#        
+#        if "ready" in recv_msg:
+#            print ("WORKER READY")
+#            print("Commenced sending of raw URL's to worker...")
+#            totalCC = send_work(blobUrlList, connectionSocket)     # send the raw URL's to the worker
+#            finished = True
+#            connectionSocket.close()
+#    
+#    
+#    
+#    total_cc = send_work(blobUrlList)     # send the raw URL's to the worker
+#    
+#    print("Total CC is: " + str(totalCC))
+#    
+#    avgCC = totalCC/len(blobUrlList)
+#    print("Average CC is: " + str(avgCC))
 
 if __name__ == "__main__":
     main()

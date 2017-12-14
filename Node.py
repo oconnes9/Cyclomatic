@@ -74,20 +74,21 @@ def calc_CC(raw_url, ccConfig):
 
 def receive_work():
     
-    CC_socket = socket(AF_INET, SOCK_STREAM)
+    ccsocket = socket(AF_INET, SOCK_STREAM)
     serverName = 'localhost'
     serverPort = 1111
-    CC_socket.bind(('', serverPort))
-    CC_socket.listen(1)
+    ccsocket.connect((serverName, serverPort))
+    
+    message = 'Free'
+    ccsocket.send(message)
     
     while True:
-        connectionSocket, addr = CC_socket.accept()
-        raw_url = connectionSocket.recv(1024)
-        raw_url = raw_url.decode()
+        rawUrl = connectionSocket.recv(1024)
         
-        print("RECEIVED: " + raw_url)
+        if rawUrl == 
+        print("Received from master: " + rawUrl)
         
-        file_cc = calc_CC(raw_url, ccConfig)
+        file_cc = calc_CC(rawUrl, ccConfig)
         
         file_cc = str(file_cc)
         print(file_cc)
