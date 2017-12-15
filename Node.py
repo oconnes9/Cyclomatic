@@ -8,12 +8,14 @@ from time import gmtime, strftime
 import os.path
 import sys
 import shutil
-
 from re import match
+
 totalCC = 0
-manager_url = 'http://localhost:1111/'
+
 
 class Node():
+    masterUrl = 'http://localhost:1111/'
+    totalCC = 0
     ccConfig = Config(
                        exclude='',
                        ignore='venv',
@@ -28,7 +30,7 @@ class Node():
         self.blobUrl = requests.get(self.masterUrl).json()
         print(self.blobUrl)
 
-    def getHeader():
+    def getHeader(self):
         with open('github-token.txt', 'r') as tmp_file:
             token = tmp_file.read()     # get the token from a text file in current directory
 
@@ -39,32 +41,35 @@ class Node():
         return (payload, headers)
 
 
-    def check_py(filename):
+    def checkPy(self, filename):
         return True if match('.*\.py', filename) is not None else False
 
-    def calcCC(rawUrl, ccConfig):
+    def calcCC(self, blobUrl):
         
-        blobUrl = rawUrl.split('|')[0]
-        filename = rawUrl.split('|')[1]
+        print(blobUrl)
+        url = blobUrl.split('|')[0]
+        filename = blobUrl.split('|')[1]
         
         payload_headers = self.getHeader()
         
-        flag = self.check_py(filename)
+        flag = self.checkPy(filename)
         
         if flag == True:
             
-            resp = requests.get(blobUrl,   params=payload_headers[0], headers=payload_headers[1])
+            resp = requests.get(url,   params=payload_headers[0], headers=payload_headers[1])
             
-            filePath = filename
+            sha = url.split('/blobs/')[1]
             
-            with open(filePath, 'w') as tmp_file:
+            filePath = filename + sha + '.py'
+            
+            with open(filePath, 'w') as tmpFile:
                 tmpFile.write(resp.text)
             tmpFile.close()
             
             
-            getFile = open(file_path, 'r')
-            results = CCHarvester(filePath, ccConfig).gobble(getFile)
-            CC_file_get.close()
+            getFile = open(filePath, 'r')
+            results = CCHarvester(filePath, self.ccConfig).gobble(getFile)
+            getFile.close()
             os.remove(filePath)
             
             fileCC = 0
@@ -78,26 +83,29 @@ class Node():
         else:
             return 0
 
-    def receiveWork():
+    def receiveWork(self):
         print("Blob: " + self.blobUrl)
         
         fileCC= self.calcCC(self.blobUrl)
         self.totalCC += fileCC
         
         self.blobUrl = requests.get(self.masterUrl).json()
-        if self.blobUrl != "finished":
-            self.receiveWork()
-        else:
-            print("Finished...")
-            print("Total CC: " + str(self.totalCC))
-            requests.put(self.masterUrl, data={'cc': self.totalCC})
+        while self.blobUrl != "finished":
+            fileCC = self.calcCC(self.blobUrl)
+            self.totalCC += fileCC
+            self.blobUrl = requests.get(self.masterUrl).json()
+
+
+        print("Finished...")
+        print("Total CC: " + str(self.totalCC))
+        requests.put(self.masterUrl, data={'cc': self.totalCC})
 
 
 def main():
     
     print("Worker is ready to receive...")
     node = Node()
-    node.receive_work()
+    node.receiveWork()
 
 if __name__ == "__main__":
     main()
