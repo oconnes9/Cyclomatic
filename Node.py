@@ -31,7 +31,7 @@ class Node():
         print(self.blobUrl)
 
     def getHeader(self):
-        with open('github-token.txt', 'r') as tmp_file:
+        with open('token.txt', 'r') as tmp_file:
             token = tmp_file.read()     # get the token from a text file in current directory
 
         payload = {'access_token': token}
@@ -50,17 +50,15 @@ class Node():
         url = blobUrl.split('|')[0]
         filename = blobUrl.split('|')[1]
         
-        payload_headers = self.getHeader()
+        headers = self.getHeader()
         
         flag = self.checkPy(filename)
         
         if flag == True:
             
-            resp = requests.get(url,   params=payload_headers[0], headers=payload_headers[1])
+            resp = requests.get(url,   params=headers[0], headers=headers[1])
             
-            sha = url.split('/blobs/')[1]
-            
-            filePath = filename + sha + '.py'
+            filePath = filename + '.py'
             
             with open(filePath, 'w') as tmpFile:
                 tmpFile.write(resp.text)
